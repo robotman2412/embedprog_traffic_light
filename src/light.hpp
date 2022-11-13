@@ -23,14 +23,15 @@ enum Color {
 // A single traffic light.
 class Light {
 	private:
-		int   redPin, yellowPin, greenPin;
-		float redPwm, yellowPwm, greenPwm;
-		bool  red,    yellow,    green;
+		int   redPin,  yellowPin,  greenPin;
+		bool *redPtr, *yellowPtr, *greenPtr;
+		float redPwm,  yellowPwm,  greenPwm;
+		bool  red,     yellow,     green;
 		
 		// Update PWM for a specific pin.
 		void updatePinPwm(bool state, float &pwm);
 		// An analogWrite wrapper.
-		void write(int pin, float value);
+		void write(int pin, bool *ptr, float value);
 		
 		// Last color stateD.
 		Color lastColor;
@@ -40,6 +41,8 @@ class Light {
 		Color color;
 		// Whether this light uses active low.
 		bool activeLow;
+		// Whether this light is made out of pointers.
+		bool isPointer;
 		
 		// A light that does nothing.
 		Light();
@@ -49,6 +52,12 @@ class Light {
 		// A light with red, yellow and green.
 		// -1 is not present.
 		Light(int redPin, int yellowPin, int greenPin);
+		// A light with only red and green.
+		// -1 is not present.
+		Light(bool *redPin, bool *greenPin);
+		// A light with red, yellow and green.
+		// -1 is not present.
+		Light(bool *redPin, bool *yellowPin, bool *greenPin);
 		
 		// Update the light's PWM outputs.
 		void updatePwm();

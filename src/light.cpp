@@ -21,8 +21,9 @@ static SemaphoreHandle_t pwmMutex;
 
 // Update PWM for a specific pin.
 void Light::updatePinPwm(bool state, float &pwm) {
-	// pwm = state;
-	if (state) {
+	if (isPointer) {
+		pwm = state;
+	} else if (state) {
 		pwm  = pwm + (1 - pwm) * PWM_COEFF;
 	} else {
 		pwm *= (1 - PWM_COEFF);
@@ -30,9 +31,13 @@ void Light::updatePinPwm(bool state, float &pwm) {
 }
 
 // An analogWrite wrapper.
-void Light::write(int pin, float value) {
-	if (activeLow) value = 1 - value;
-	analogWrite(pin, PWM_RES * value);
+void Light::write(int pin, bool *ptr, float value) {
+	if (isPointer) {
+		if (ptr) *ptr = value >= 0.5;
+	} else {
+		if (activeLow) value = 1 - value;
+		analogWrite(pin, PWM_RES * value);
+	}
 }
 
 
@@ -51,6 +56,7 @@ Light::Light() {
 	color     = Color::Off;
 	lastColor = color;
 	activeLow = ACTIVE_LOW_DEFAULT;
+	isPointer = false;
 }
 
 // A light with only red and green.
@@ -68,6 +74,7 @@ Light::Light(int redPin, int greenPin) {
 	color     = Color::Off;
 	lastColor = color;
 	activeLow = ACTIVE_LOW_DEFAULT;
+	isPointer = false;
 }
 
 // A light with red, yellow and green.
@@ -85,6 +92,49 @@ Light::Light(int redPin, int yellowPin, int greenPin) {
 	color     = Color::Off;
 	lastColor = color;
 	activeLow = ACTIVE_LOW_DEFAULT;
+	isPointer = false;
+}
+
+// A light with only red and green.
+// -1 is not present.
+Light::Light(bool *redPtr, bool *greenPtr) {
+	this->redPin    = -3;
+	this->yellowPin = -1;
+	this->greenPin  = -3;
+	this->redPtr    = redPtr;
+	this->yellowPtr = NULL;
+	this->greenPtr  = greenPtr;
+	red       = false;
+	yellow    = false;
+	green     = false;
+	redPwm    = 0;
+	yellowPwm = 0;
+	greenPwm  = 0;
+	color     = Color::Off;
+	lastColor = color;
+	activeLow = ACTIVE_LOW_DEFAULT;
+	isPointer = true;
+}
+
+// A light with red, yellow and green.
+// -1 is not present.
+Light::Light(bool *redPtr, bool *yellowPtr, bool *greenPtr) {
+	this->redPin    = -3;
+	this->yellowPin = -3;
+	this->greenPin  = -3;
+	this->redPtr    = redPtr;
+	this->yellowPtr = yellowPtr;
+	this->greenPtr  = greenPtr;
+	red       = false;
+	yellow    = false;
+	green     = false;
+	redPwm    = 0;
+	yellowPwm = 0;
+	greenPwm  = 0;
+	color     = Color::Off;
+	lastColor = color;
+	activeLow = ACTIVE_LOW_DEFAULT;
+	isPointer = true;
 }
 
 // Update the light's PWM outputs.
@@ -124,22 +174,22 @@ void Light::updatePwm() {
 	updatePinPwm(yellow, yellowPwm);
 	updatePinPwm(green,  greenPwm);
 	
-	if (redPin >= 0 && greenPin >= 0 && yellowPin == LIGHT_YELLOW_EMU) {
+	if (redPin != -1 && greenPin != -1 && yellowPin == LIGHT_YELLOW_EMU) {
 		float redThing   = redPwm   + yellowPwm * 0.6;
 		float greenThing = greenPwm + yellowPwm * 1.0;
 		// float redThing   = 0.0;
 		// float greenThing = 0.1;
 		// redThing   *= 0.05;
 		// greenThing *= 0.05;
-		write(redPin,   redThing);
-		write(greenPin, greenThing);
+		write(redPin,   redPtr,   redThing);
+		write(greenPin, greenPtr, greenThing);
 	} else {
-		if (redPin    >= 0)
-			write(redPin,    redPwm);
-		if (yellowPin >= 0)
-			write(yellowPin, yellowPwm);
-		if (greenPin  >= 0)
-			write(greenPin,  greenPwm);
+		if (redPin    != -1)
+			write(redPin,    redPtr,    redPwm);
+		if (yellowPin != -1 && yellowPin != -2)
+			write(yellowPin, yellowPtr, yellowPwm);
+		if (greenPin  != -1)
+			write(greenPin,  greenPtr,  greenPwm);
 	}
 }
 

@@ -81,6 +81,7 @@ void Phase::addDetector(Detector detector) {
 // Something just arrived and is waiting for this phase.
 void Phase::notify(uint64_t distance) {
 	uint64_t nextTime = millis() + distance;
+	if (light->color == Color::Green) return;
 	if (!waitingSince || nextTime < waitingSince) {
 		waitingSince = nextTime;
 		if (this->waitingSince) digitalWrite(25, 1);
@@ -166,11 +167,24 @@ void System::update() {
 			
 		} while (found != -1);
 		
+		// Keep all phases in current which are compatible.
+		for (int i = 0; i < phases.size(); i++) {
+			// If phase is active...
+			if (currentPhase & (1 << i)) {
+				// And compatible...
+				if (!(phases[i]->exclusive & map)) {
+					// Add it to the map!
+					map |= 1 << i;
+				}
+			}
+		}
+		
 		// Then find the time required for clearing of active phases.
 		uint64_t clearTime = 0;
+		uint32_t removed = currentPhase & ~map;
 		for (size_t i = 0; i < phases.size(); i++) {
 			// If the phase is in the map...
-			if (map & (1 << i)) {
+			if (removed & (1 << i)) {
 				// Include it's clearing time.
 				if (phases[i]->clearTime > clearTime) {
 					clearTime = phases[i]->clearTime;

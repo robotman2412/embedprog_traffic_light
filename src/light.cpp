@@ -1,16 +1,12 @@
 
 #include "light.hpp"
 #include <vector>
-#include <Arduino.h>
 
 
 
+// A list of all lights in the traffic system.
 static std::vector<Light *> lightsList;
 
-
-
-#define PWM_COEFF 0.2
-#define PWM_RES   255
 
 
 // A light that does nothing.
@@ -25,7 +21,6 @@ Light::Light() {
 }
 
 // A light with only red and green.
-// -1 is not present.
 Light::Light(bool *redPtr, bool *greenPtr) {
 	this->redPtr    = redPtr;
 	this->yellowPtr = NULL;
@@ -37,7 +32,6 @@ Light::Light(bool *redPtr, bool *greenPtr) {
 }
 
 // A light with red, yellow and green.
-// -1 is not present.
 Light::Light(bool *redPtr, bool *yellowPtr, bool *greenPtr) {
 	this->redPtr    = redPtr;
 	this->yellowPtr = yellowPtr;
@@ -48,7 +42,7 @@ Light::Light(bool *redPtr, bool *yellowPtr, bool *greenPtr) {
 	color     = Color::Red;
 }
 
-// Update the light's PWM outputs.
+// Update the light's LED outputs based on it's target color.
 void Light::update(bool blinkStatus) {
 	// Calculate LED values for current color.
 	switch (color) {
@@ -100,7 +94,9 @@ void Light::update(bool blinkStatus) {
 
 // Update all the lights.
 void updateLights() {
+	// The last time at which the lights blinked.
 	static uint64_t lastBlinkTimer = 0;
+	// Whether blinking lights are currently ON.
 	static bool blinkingStatus = 0;
 	
 	// Has LIGHT_BLINK_TIME passed yet?

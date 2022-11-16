@@ -15,11 +15,12 @@ enum Color {
 
 // A single traffic light.
 class Light {
-	private:
+	public:
+		// Pointers for LED values.
 		bool *redPtr, *yellowPtr, *greenPtr;
+		// Target LED values.
 		bool  red,     yellow,     green;
 		
-	public:
 		// The color that this light is in.
 		Color color;
 		

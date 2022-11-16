@@ -1,3 +1,4 @@
+
 #include "main.hpp"
 
 // The amount of bits to use for the shift register.
@@ -9,9 +10,14 @@
 // The data input pin for the shift register.
 #define SR_DAT  19
 
+// The bits to send to the shift register later on.
 bool srBits[SR_BITS];
 
+// There are 8 pedestrian LEDs, but one phase.
+// This helper is used to extend one phase to 8 LEDs.
 bool pedestianRed;
+// There are 8 pedestrian LEDs, but one phase.
+// This helper is used to extend one phase to 8 LEDs.
 bool pedestianGreen;
 
 Phase phases[9];
@@ -34,26 +40,33 @@ const int buttonPins[9] = {
 
 System trafficsys;
 
+// Bitmap: Straight and right #1
 #define MASK_SR1 (1 << 0)
+// Bitmap: Left #1
 #define MASK_LT1 (1 << 1)
+// Bitmap: Straight and right #2
 #define MASK_SR2 (1 << 2)
+// Bitmap: Left #2
 #define MASK_LT2 (1 << 3)
+// Bitmap: Straight and right #3
 #define MASK_SR3 (1 << 4)
+// Bitmap: Left #3
 #define MASK_LT3 (1 << 5)
+// Bitmap: Straight and right #4
 #define MASK_SR4 (1 << 6)
+// Bitmap: Left #4
 #define MASK_LT4 (1 << 7)
+// Bitmap: Pedestrians
 #define MASK_PED (1 << 8)
 
+// Bitmap: All phases.
 #define MASK_ALL 0x1ff
 
-void buttonInterrupt(void *arg) {
-	// Arg stores an index in the list of phases.
-	int index = (int) arg;
-	// Notify the phase of the button press.
-	phases[index].notify();
-}
-
 void setup() {
+	
+	// LEDs per traffic light are ordered Red, Yellow, Green.
+	// Traffic lights are ordered Straight/Right followed by Left, per direction.
+	// Directions 1 and 3 oppose each other.
 	
 	// Create phases.
 	phases[0] = Phase("Straight/Right #1", registerLight(new Light(srBits +  0, srBits +  1, srBits +  2)));
@@ -80,14 +93,12 @@ void setup() {
 	phases[8].exclusive = MASK_ALL & ~MASK_PED;
 	phases[8].priority = 2;
 	
-	// Attach interrupts for button pins.
+	// Traffic reed switches are active low.
 	for (int i = 0; i < 8; i++) {
-		// attachInterruptArg(digitalPinToInterrupt(buttonPins[i]), buttonInterrupt, (void *) i, FALLING);
 		pinMode(buttonPins[i], INPUT_PULLUP);
 	}
 	
 	// Pedestrian buttons are active high.
-	// attachInterruptArg(digitalPinToInterrupt(buttonPins[8]), buttonInterrupt, (void *) 8, RISING);
 	pinMode(buttonPins[8], INPUT_PULLUP);
 	
 	// Add phases to the system.
@@ -124,8 +135,9 @@ void loop() {
 	// Update lights accordingly.
 	updateLights();
 	
-	// Update pedestrian pins.
+	// Update pedestrian lights.
 	for (int i = 0; i < 8; i++) {
+		// Pedestrians start at index 24, and go red, green, red, etc.
 		int offset = 24 + 2 * i;
 		srBits[offset]   = pedestianRed;
 		srBits[offset+1] = pedestianGreen;
@@ -141,9 +153,10 @@ void loop() {
 		}
 	}
 	
+	// Check for pedestrian sensors (active high).
 	if (digitalRead(buttonPins[8])) {
 		phases[8].notify();
 	}
 	
-	delay(50);
+	delay(10);
 }

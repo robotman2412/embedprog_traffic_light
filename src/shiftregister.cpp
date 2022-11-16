@@ -1,6 +1,5 @@
 
 #include "shiftregister.hpp"
-#include <Arduino.h>
 
 // A shift register is pretty fast.
 // This delay is one microsecond (0.000001 second)

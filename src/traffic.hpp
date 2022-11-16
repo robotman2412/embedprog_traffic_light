@@ -3,6 +3,7 @@
 
 #include "light.hpp"
 #include <vector>
+#include <Arduino.h>
 
 
 
@@ -54,6 +55,12 @@ class System {
 		
 		System();
 		
-		// The function that reolves which lights to turn on next.
+		// Apply the scheduled change.
+		void applyChange();
+		// Turn traffic lights yellow when scheduled.
+		void turnLightsYellow();
+		// Decide what new change to schedule, if any.
+		void scheduleChange();
+		// The main loop for deciding which lights do what.
 		void update();
 };

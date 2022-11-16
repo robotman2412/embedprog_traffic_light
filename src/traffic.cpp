@@ -26,7 +26,6 @@ Phase::Phase(const char *name, Light *light) {
 
 // Traffic just arrived and is waiting for this phase.
 void Phase::notify() {
-	// Determine when the phase would like to turn on.
 	uint64_t now = millis();
 	
 	// If already green, skip.
